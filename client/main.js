@@ -1,17 +1,5 @@
-// Load and Save Functions
-function saveToStorage(notes) {
-  localStorage.setItem("myNotes", JSON.stringify(notes));
-}
-
-function loadFromStorage() {
-  const data = localStorage.getItem("myNotes");
-  return data ? JSON.parse(data) : [];
-}
-
-let notes = loadFromStorage(); // ✅ Load on startup
-let editingId = null;
-
 // client/main.js
+
 document.addEventListener("DOMContentLoaded", () => {
   const notesList = document.getElementById("notes-list");
   const createBtn = document.getElementById("create-note");
@@ -22,6 +10,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const noteContentInput = document.getElementById("note-content");
   const saveBtn = document.getElementById("save-btn");
   const cancelBtn = document.getElementById("cancel-btn");
+
+  let notes = [];
+  let editingId = null;
+
+  async function fetchNotes() {
+    try {
+      const res = await fetch("http://localhost:3000/api/notes");
+      notes = await res.json();
+      renderNotes();
+    } catch (err) {
+      alert("Failed to load notes from server.");
+      console.error(err);
+    }
+  }
 
   function renderNotes() {
     notesList.innerHTML = "";
@@ -39,10 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
       notesList.appendChild(noteCard);
     });
 
-    // Attach edit/delete handlers
     document.querySelectorAll(".edit-btn").forEach(btn => {
       btn.addEventListener("click", () => openEditor(parseInt(btn.dataset.id)));
     });
+
     document.querySelectorAll(".delete-btn").forEach(btn => {
       btn.addEventListener("click", () => deleteNote(parseInt(btn.dataset.id)));
     });
@@ -68,34 +70,45 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.classList.add("hidden");
   }
 
-  function saveNote() {
+  async function saveNote() {
     const title = noteTitleInput.value.trim();
     const content = noteContentInput.value.trim();
     if (!title || !content) return alert("Both title and content are required.");
 
-    if (editingId) {
-      const note = notes.find(n => n.id === editingId);
-      note.title = title;
-      note.content = content;
-    } else {
-      const newNote = {
-        id: Date.now(),
-        title,
-        content,
-      };
-      notes.push(newNote);
-    }
+    try {
+      if (editingId) {
+        await fetch(`http://localhost:3000/api/notes/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content })
+        });
+      } else {
+        await fetch("http://localhost:3000/api/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content })
+        });
+      }
 
-    saveToStorage(notes); // ✅ Save to localStorage
-    closeEditor();
-    renderNotes();
+      closeEditor();
+      await fetchNotes();
+    } catch (err) {
+      alert("Failed to save note.");
+      console.error(err);
+    }
   }
 
-  function deleteNote(id) {
-    if (confirm("Delete this note?")) {
-      notes = notes.filter(n => n.id !== id);
-      saveToStorage(notes); // ✅ Save to localStorage
-      renderNotes();
+  async function deleteNote(id) {
+    if (!confirm("Delete this note?")) return;
+
+    try {
+      await fetch(`http://localhost:3000/api/notes/${id}`, {
+        method: "DELETE"
+      });
+      await fetchNotes();
+    } catch (err) {
+      alert("Failed to delete note.");
+      console.error(err);
     }
   }
 
@@ -104,5 +117,5 @@ document.addEventListener("DOMContentLoaded", () => {
   cancelBtn.addEventListener("click", closeEditor);
   saveBtn.addEventListener("click", saveNote);
 
-  renderNotes(); // ✅ Render loaded notes on page load
+  fetchNotes(); // Load notes from backend on page load
 });
