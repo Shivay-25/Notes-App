@@ -1,25 +1,41 @@
+// routes/notesroutes.js
 const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+const Note = require("../models/Note"); // Adjust the path based on your project
 
-const notesroutes = require("./notesroutes.js");
+const router = express.Router();
 
-const app = express();
+// @route   GET /api/notes
+router.get("/", async (req, res) => {
+  try {
+    const notes = await Note.find();
+    res.json(notes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// @route   POST /api/notes
+router.post("/", async (req, res) => {
+  try {
+    const newNote = new Note({
+      title: req.body.title,
+      content: req.body.content,
+    });
+    const savedNote = await newNote.save();
+    res.json(savedNote);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// Routes
-app.use("/api/notes", notesroutes);
+// @route   DELETE /api/notes/:id
+router.delete("/:id", async (req, res) => {
+  try {
+    await Note.findByIdAndDelete(req.params.id);
+    res.json({ message: "Note deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error(err));
-
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+module.exports = router;

@@ -1,11 +1,9 @@
-import mongoose from "mongoose";
+// models/Note.js
+const mongoose = require("mongoose");
 
-const noteSchema = new mongoose.Schema(
-  {
-    title: { type: String, required: true },
-    content: { type: String, required: true }
-  },
-  { timestamps: true }
-);
+const NoteSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+});
 
-export default mongoose.model("Note", noteSchema);
+module.exports = mongoose.model("Note", NoteSchema);
