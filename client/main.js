@@ -33,7 +33,7 @@ function closeEditor() {
 
 async function fetchNotes() {
   try {
-    const res = await fetch("http://localhost:4000/api/notes");
+    const res = await fetch("https://notes-app-2czm.onrender.com");
     const notes = await res.json();
 
     notesList.innerHTML = "";
@@ -79,13 +79,13 @@ async function saveNote() {
   try {
     let res;
     if (editingId) {
-      res = await fetch(`http://localhost:4000/api/notes`, {
+      res = await fetch(`https://notes-app-2czm.onrender.com`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, content })
       });
     } else {
-      res = await fetch("http://localhost:4000/api/notes", {
+      res = await fetch("https://notes-app-2czm.onrender.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, content })
@@ -108,7 +108,7 @@ async function deleteNote(id) {
   if (!confirm("Delete this note?")) return;
 
   try {
-    await fetch(`http://localhost:4000/api/notes`, {
+    await fetch(`https://notes-app-2czm.onrender.com`, {
       method: "DELETE"
     });
     await fetchNotes();
