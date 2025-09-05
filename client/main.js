@@ -5,6 +5,7 @@ const noteContentInput = document.getElementById("note-content");
 const saveBtn = document.getElementById("save-btn");
 const cancelBtn = document.getElementById("cancel-btn");
 const createNoteBtn = document.getElementById("create-note");
+const API_URL = "https://notes-app-2czm.onrender.com";
 
 let editingId = null;
 
